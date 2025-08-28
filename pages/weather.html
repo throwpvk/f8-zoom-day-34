@@ -86,15 +86,37 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script type="text/babel">
       const { useState } = React;
-
+      // Thời tiết
       const weatherTypes = [
         { weather: "Nắng", icon: "☀️" },
+        { weather: "Nắng gắt", icon: "🌞" },
+        { weather: "Nắng dịu", icon: "🌅" },
+        { weather: "Nắng nóng kỷ lục", icon: "🔥" },
+
         { weather: "Có mây", icon: "🌤️" },
-        { weather: "Mưa nhẹ", icon: "🌧️" },
+        { weather: "Nhiều mây", icon: "☁️" },
+        { weather: "Mây rải rác", icon: "⛅" },
+        { weather: "Trời u ám", icon: "🌥️" },
+
+        { weather: "Mưa nhẹ", icon: "🌦️" },
+        { weather: "Mưa vừa", icon: "🌧️" },
+        { weather: "Mưa to", icon: "🌨️" },
+        { weather: "Mưa phùn", icon: "💧" },
+        { weather: "Mưa rào", icon: "🌦️" },
+        { weather: "Mưa đá", icon: "🧊" },
+
         { weather: "Giông bão", icon: "⛈️" },
+        { weather: "Sấm sét", icon: "⚡" },
+        { weather: "Bão nhiệt đới", icon: "🌀" },
+        { weather: "Lốc xoáy", icon: "🌪️" },
+
         { weather: "Tuyết", icon: "❄️" },
+        { weather: "Tuyết rơi nhẹ", icon: "🌨️" },
+        { weather: "Bão tuyết", icon: "🌬️" },
+        { weather: "Sương giá", icon: "🥶" },
       ];
 
+      // Danh sách tỉnh thành phân chia theo khu vực
       const regions = {
         "Đồng bằng sông Hồng": [
           "Hà Nội",
@@ -166,35 +188,47 @@
           "Cà Mau",
         ],
       };
-
+      // Mảng chứa tất cả tỉnh thành
       const allCities = [].concat(...Object.values(regions));
+      // Khởi tạo obj dữ liệu thời tiết
       const weatherDataInit = {};
+      // Gán giá trị cho obj thời tiết
       allCities.forEach((city) => {
+        // Tạo giá trị thời tiết ngẫu nhiên
         const randomType =
           weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
         weatherDataInit[city] = {
           city,
+          // Tạo nhiệt độ ngẫu nhiên
           temp: Math.floor(Math.random() * 35) + 5,
+          // Tạo độ ẩm ngẫu nhiên
           humidity: Math.floor(Math.random() * 101),
+          // Thông tin thời tiết
           weather: randomType.weather,
+          // icon thời tiết
           icon: randomType.icon,
         };
       });
-
+      // Hàm lấy giá trị thời tiết xuất hiện nhiều nhất trong khu vực
       const mostFrequentWeather = (cities, data) => {
         const count = {};
+        // Đếm từng giá trị thời tiết
         cities.forEach((city) => {
           const w = data[city].weather;
           count[w] = (count[w] || 0) + 1;
         });
+        // Lấy số lần xuất hiện nhiều nhất của thời tiết
         const maxCount = Math.max(...Object.values(count));
+        // Lọc lấy giá trị thời tiết xuất hiện nhiều nhất
         const candidates = Object.keys(count).filter(
           (k) => count[k] === maxCount
         );
+        // Nếu có nhiều thời tiết có cùng bằng max, thì chọn ngẫu nhiên
         const chosen =
           candidates[Math.floor(Math.random() * candidates.length)];
+
         const icon = data[cities.find((c) => data[c].weather === chosen)].icon;
-        return icon + " " + chosen;
+        return { icon, weather: chosen };
       };
 
       const RegionCard = ({
@@ -204,16 +238,23 @@
         setWeatherData,
       }) => {
         const [selectedCity, setSelectedCity] = useState("all");
+        // Hàm xử lý thay đổi tỉnh thành khi select
         const handleChange = (e) => setSelectedCity(e.target.value);
+        // Hàm làm mới khi nhấn nút làm mới
         const handleRefresh = () => {
+          // Nếu đang là toàn khu vực thì làm mới ngẫu nhiên 1 tỉnh trong khu vực
           const city =
             selectedCity === "all"
               ? cities[Math.floor(Math.random() * cities.length)]
               : selectedCity;
+          // Cập nhật dữ liệu thời tiết
           setWeatherData((prev) => {
+            // Copy lại dữ liệu
             const newData = { ...prev };
+            // Tạo dữ liệu ngẫu nhiên
             const randomType =
               weatherTypes[Math.floor(Math.random() * weatherTypes.length)];
+            // Gán giá trị ngẫu nhiên đã tạo vào thành phố đã chọn
             newData[city] = {
               ...newData[city],
               temp: Math.floor(Math.random() * 35) + 5,
@@ -221,23 +262,29 @@
               weather: randomType.weather,
               icon: randomType.icon,
             };
+            // Trả về danh sách mới, với 1 thành phố đã được làm mới
             return newData;
           });
         };
-
+        // Lẫy dữ liệu thời tiết xuất hiện nhiều nhất trong khu vực
+        const { icon, weather } = mostFrequentWeather(cities, weatherData);
+        // Dữ liệu được hiển thị
         const displayData =
           selectedCity === "all"
             ? {
-                label: "Toàn khu vực",
+                // Nhiệt độ là trung bình của các tỉnh trong khu vực
                 temp: Math.round(
                   cities.reduce((sum, c) => sum + weatherData[c].temp, 0) /
                     cities.length
                 ),
+                // Điị ẩm là trung bình của các tỉnh trong khu vực
                 humidity: Math.round(
                   cities.reduce((sum, c) => sum + weatherData[c].humidity, 0) /
                     cities.length
                 ),
-                weatherInfo: mostFrequentWeather(cities, weatherData),
+                // Thông tin thời tiết là thời tiết xuất hiện nhiều nhất trong khu vực
+                icon,
+                weather,
               }
             : weatherData[selectedCity];
 
@@ -252,24 +299,15 @@
                 </option>
               ))}
             </select>
-            <div className="emoji">
-              {selectedCity === "all"
-                ? displayData.weatherInfo.split(" ")[0]
-                : displayData.icon}
-            </div>
+            <div className="emoji">{displayData.icon}</div>
             <div className="info">
               <strong>
-                {selectedCity === "all" ? displayData.label : displayData.city}
+                {selectedCity === "all" ? "Toàn khu vực" : displayData.city}
               </strong>
             </div>
             <div>Nhiệt độ: {displayData.temp}°C</div>
             <div>Độ ẩm: {displayData.humidity}%</div>
-            <div>
-              Thời tiết:{" "}
-              {selectedCity === "all"
-                ? displayData.weatherInfo.split(" ").slice(1).join(" ")
-                : displayData.weather}
-            </div>
+            <div>Thời tiết: {displayData.weather}</div>
             <button onClick={handleRefresh}>Làm mới</button>
           </div>
         );
