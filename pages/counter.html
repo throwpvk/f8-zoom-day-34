@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Counter App</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: sans-serif;
+      }
+      #root {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        background: #a1ffce;
+        background: -webkit-linear-gradient(to right, #faffd1, #a1ffce);
+        background: linear-gradient(to right, #faffd1, #a1ffce);
+      }
+      h1 {
+        flex: 1;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 20vw;
+        margin: 0;
+        color: cadetblue;
+      }
+      nav {
+        display: flex;
+        justify-content: space-around;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 15px 30vw;
+        position: sticky;
+        bottom: 0;
+      }
+      button {
+        flex: 1;
+        margin: 0 10px;
+        padding: 15px 0;
+        font-size: 1.5rem;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        background: rgba(255, 255, 255, 0.8);
+        transition: 0.2s;
+        color: cadetblue;
+      }
+      button:hover {
+        background: rgba(255, 255, 255, 1);
+      }
+      @media (max-width: 600px) {
+        nav {
+          padding: 15px 15vw;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+      // Display component
+      const Display = ({ color, fontSize, children }) => {
+        return <h1 style={{ color, fontSize }}>{children}</h1>;
+      };
+      // Button component
+      const Button = ({ children, onClick }) => {
+        return <button onClick={onClick}>{children}</button>;
+      };
+
+      // Nav component
+      const Nav = ({ onPlus, onMinus, onReset, onHome }) => {
+        return (
+          <nav>
+            <Button onClick={onHome}>
+              <i className="fa-solid fa-house"></i>
+            </Button>
+            <Button onClick={onMinus}>
+              <i className="fa-solid fa-minus"></i>
+            </Button>
+            <Button onClick={onPlus}>
+              <i className="fa-solid fa-plus"></i>
+            </Button>
+            <Button onClick={onReset}>
+              <i className="fa-solid fa-rotate-left"></i>
+            </Button>
+          </nav>
+        );
+      };
+
+      const App = () => {
+        // Đoạn text welcome khi khởi động app
+        const texts = [
+          "Chào mừng bạn đến với ứng dụng Counter!",
+          "Hãy chờ một chút để khởi chạy...",
+          "Khởi chạy đã hoàn tất!",
+        ];
+        // useState counter
+        const [count, setCount] = React.useState(0);
+        // useState đếm bước
+        const [step, setStep] = React.useState(0);
+        // useState dùng để gõ chữ
+        const [typed, setTyped] = React.useState("");
+
+        // Sử dụng useEffect tạo hiệu ứng gõ chữ khi khởi động app
+        React.useEffect(() => {
+          // Hàm đệ quy để thực hiện typing text
+          function typeText(index, charIndex = 0) {
+            if (index >= texts.length) {
+              // Ở step cuối hiển thị app chính
+              setStep(texts.length);
+              return;
+            }
+
+            if (charIndex < texts[index].length) {
+              // Nếu chưa gõ hết dòng, tiếp tục gõ bằng cách thêm char mới vào
+              setTyped((prev) => prev + texts[index][charIndex]);
+              // Chờ một chút rồi gọi hàm đệ quy để gõ char tiếp theo của dòng hiện tại
+              setTimeout(() => typeText(index, charIndex + 1), 50);
+            } else {
+              // Nếu gõ xong dòng, chờ 1s rồi xóa hết, gõ tiếp dòng tiếp theo
+              setTimeout(() => {
+                // Xóa hết khi gõ xong 1 hàng
+                setTyped("");
+                // Gọi hàm đệ quy để gõ dòng tiếp theo
+                typeText(index + 1, 0);
+              }, 1000);
+            }
+          }
+
+          // Gọi lần đầu khi khởi động trang
+          typeText(0);
+        }, []);
+        // Hàm xử lý nhấn nút +
+        const handlePlusClick = () => setCount(count + 1);
+        // Hàm xử lý nhấn nút -
+        const handleMinusClick = () => setCount(count - 1);
+        // Hàm xử lý reset counter
+        const handleResetClick = () => setCount(0);
+        // Hàm xử lý quay về trang chủ
+        const handleHomeClick = () =>
+          (window.location.href = window.location.origin + "/index.html");
+
+        return (
+          <>
+            {step < texts.length && (
+              <Display color="cadetblue" fontSize={"4vw"}>
+                {typed}
+              </Display>
+            )}
+            {step >= texts.length && (
+              <>
+                <Display
+                  color={count >= 0 ? "cadetblue" : "chocolate"}
+                  fontSize={"20vw"}
+                >
+                  {count}
+                </Display>
+                <Nav
+                  onPlus={handlePlusClick}
+                  onMinus={handleMinusClick}
+                  onReset={handleResetClick}
+                  onHome={handleHomeClick}
+                />
+              </>
+            )}
+          </>
+        );
+      };
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>

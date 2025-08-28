@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Todo App</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        height: 100%;
+        background: linear-gradient(to right, #faffd1, #a1ffce);
+      }
+
+      #root {
+        max-width: 800px;
+        margin: auto;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+      }
+
+      h1 {
+        color: cadetblue;
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      nav {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      nav button {
+        font-size: 1.5rem;
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: none;
+        background: cadetblue;
+        color: white;
+        cursor: pointer;
+        transition: 0.2s;
+        margin: 0 20px;
+      }
+
+      nav button:hover {
+        background: darkcyan;
+      }
+
+      nav span {
+        font-size: 1rem;
+        font-weight: bold;
+        color: cadetblue;
+      }
+
+      .task-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 1fr);
+        gap: 15px;
+      }
+
+      .task {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: #ffffffcc;
+        padding: 12px 15px;
+        border-radius: 10px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: 0.2s;
+      }
+
+      .task:hover {
+        transform: translateY(-2px);
+      }
+
+      .task span {
+        flex: 1;
+        margin-left: 10px;
+        word-break: break-word;
+        color: cadetblue;
+        font-weight: bold;
+      }
+
+      .task input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+      }
+
+      .task button {
+        background: transparent;
+        color: firebrick;
+        border: none;
+        border-radius: 6px;
+        padding: 5px;
+        cursor: pointer;
+        transition: 0.2s;
+        font-size: large;
+      }
+
+      .task button:hover {
+        opacity: 0.6;
+      }
+
+      /* Modal */
+      .modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: rgba(0, 0, 0, 0.4);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s;
+      }
+
+      .modal.show {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .modal-content {
+        background: #fff;
+        padding: 25px;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 400px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        animation: scaleIn 0.3s ease forwards;
+      }
+
+      @keyframes scaleIn {
+        0% {
+          transform: scale(0.8);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
+      }
+
+      .modal-content button,
+      form button {
+        background: cadetblue;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 15px;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: 0.2s;
+      }
+
+      .modal-content button:hover,
+      form button:hover {
+        background: darkcyan;
+      }
+
+      input[type="text"] {
+        padding: 10px;
+        font-size: 1rem;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        color: cadetblue;
+      }
+
+      @media (max-width: 600px) {
+        nav {
+          flex-direction: column;
+          gap: 10px;
+        }
+        .task-list {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.development.js"
+    ></script>
+    <script
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
+    ></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script type="text/babel">
+      const Display = ({ children }) => <h1>{children}</h1>;
+      const Button = ({ children, onClick }) => (
+        <button onClick={onClick}>{children}</button>
+      );
+
+      const Modal = ({ visible, onClose, children }) => {
+        if (!visible) return null;
+
+        const handleOverlayClick = (e) => {
+          // Nếu click vào overlay, đóng modal
+          if (e.target === e.currentTarget) {
+            onClose();
+          }
+        };
+
+        return (
+          <div
+            className={`modal ${visible ? "show" : ""}`}
+            onClick={handleOverlayClick}
+          >
+            <div className="modal-content">
+              {children}
+              <Button onClick={onClose}>Close</Button>
+            </div>
+          </div>
+        );
+      };
+
+      const TaskInput = ({ value, onChange, onSubmit }) => {
+        const handleSubmit = (e) => {
+          e.preventDefault();
+          if (value.trim() !== "") onSubmit(value);
+        };
+        return (
+          <form
+            onSubmit={handleSubmit}
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => onChange(e.target.value)}
+              placeholder="Nhập tên task..."
+            />
+            <Button type="submit">Add Task</Button>
+          </form>
+        );
+      };
+
+      const Task = ({ task, onToggle, onDelete }) => (
+        <div className="task">
+          <input type="checkbox" checked={task.completed} onChange={onToggle} />
+          <span
+            style={{ textDecoration: task.completed ? "line-through" : "none" }}
+          >
+            {task.text}
+          </span>
+          <Button onClick={onDelete}>
+            <i class="fa-solid fa-xmark"></i>
+          </Button>
+        </div>
+      );
+
+      let uniqId = 0; // global id
+
+      const App = () => {
+        // Text welcome
+        const texts = [];
+        // Quản lý bước
+        const [step, setStep] = React.useState(0);
+        // Quản lý typing
+        const [typed, setTyped] = React.useState("");
+        // Quản lý danh sách tasks
+        const [tasks, setTasks] = React.useState([]);
+        // Quản lý input
+        const [newTask, setNewTask] = React.useState("");
+        // Quản lý trạng thái modal
+        const [modalVisible, setModalVisible] = React.useState(false);
+
+        React.useEffect(() => {
+          // Hàm đệ quy xử lý typing
+          function typeText(index = 0, charIndex = 0) {
+            if (index >= texts.length) {
+              setStep(texts.length);
+              return;
+            }
+            if (charIndex < texts[index].length) {
+              setTyped((prev) => prev + texts[index][charIndex]);
+              setTimeout(() => typeText(index, charIndex + 1), 50);
+            } else {
+              setTimeout(() => {
+                setTyped("");
+                typeText(index + 1, 0);
+              }, 1000);
+            }
+          }
+          typeText();
+        }, []);
+
+        // Hàm xử lý thêm task
+        const handleAddTask = (text) => {
+          // Lấy text từ input và thêm vào tasks vơi id
+          setTasks([
+            // task cũ đã có, trải ra, spread syntax
+            ...tasks,
+            // dùng uniqId để thêm task mới
+            { id: ++uniqId, text, completed: false },
+          ]);
+          // Cập nhật input: Reset
+          setNewTask("");
+          // Ẩn modal
+          // setModalVisible(false);
+        };
+
+        // Toggle trạng thái complete của task
+        const toggleTask = (id) => {
+          // Toggle completed của task thông qua id
+          setTasks(
+            tasks.map((t) =>
+              t.id === id ? { ...t, completed: !t.completed } : t
+            )
+          );
+        };
+
+        // Xử lý del
+        const deleteTask = (id) => {
+          // Cập nhật danh sách tasks bằng cách chỉ lấy những task có id khác với id cần xóa, loại bỏ task dựa vào id
+          setTasks(tasks.filter((t) => t.id !== id));
+        };
+
+        // Hàm xử lý quay về trang chủ
+        const handleHomeClick = () =>
+          (window.location.href = window.location.origin + "/index.html");
+
+        return (
+          <div>
+            {step < texts.length ? (
+              <Display>{typed}</Display>
+            ) : (
+              <>
+                <nav>
+                  <div>
+                    <Button onClick={handleHomeClick}>
+                      <i className="fa-solid fa-house"></i>
+                    </Button>
+                    <Button onClick={() => setModalVisible(true)}>
+                      <i className="fa-solid fa-plus"></i>
+                    </Button>
+                  </div>
+
+                  {tasks.length > 0 && (
+                    <span>
+                      {tasks.filter((t) => t.completed).length} / {tasks.length}{" "}
+                      completed
+                    </span>
+                  )}
+                </nav>
+
+                <div className="task-list">
+                  {tasks.map((t) => (
+                    <Task
+                      key={t.id} // dùng id làm key
+                      task={t}
+                      onToggle={() => toggleTask(t.id)}
+                      onDelete={() => deleteTask(t.id)}
+                    />
+                  ))}
+                </div>
+
+                <Modal
+                  visible={modalVisible}
+                  onClose={() => setModalVisible(false)}
+                >
+                  <TaskInput
+                    value={newTask} // Gán value hiện tại bằng giá trị hiện tại của newTask
+                    onChange={setNewTask} // Khi có thay đổi, cập nhật giá trị input vào newTask
+                    onSubmit={handleAddTask}
+                  />
+                </Modal>
+              </>
+            )}
+          </div>
+        );
+      };
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
