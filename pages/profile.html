@@ -4,6 +4,76 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Profile App</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+    />
+    <style>
+      body,
+      html {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      body {
+        background: linear-gradient(to right, #faffd1, #a1ffce);
+      }
+
+      #root {
+        width: 100%;
+        max-width: 500px;
+        padding: 20px;
+      }
+
+      .loading {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+      }
+
+      .spinner {
+        width: 50px;
+        height: 50px;
+        border: 6px solid #ccc;
+        border-top-color: cadetblue;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .card h2 {
+        margin: 0;
+        color: cadetblue;
+      }
+
+      .card span {
+        color: #333;
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
@@ -18,8 +88,68 @@
     ></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <script type="text/babel">
-      const getMessage = () => "Profile App";
-      document.getElementById("root").innerHTML = getMessage();
+      const Loading = () => (
+        <div className="loading">
+          <div className="spinner"></div>
+          <span>Đang tải...</span>
+        </div>
+      );
+
+      const ProfileCard = ({ user }) => (
+        <div className="card">
+          <h2>{user.name}</h2>
+          <span>
+            <b>Username:</b> {user.username}
+          </span>
+          <span>
+            <b>Email:</b> {user.email}
+          </span>
+          <span>
+            <b>Phone:</b> {user.phone}
+          </span>
+          <span>
+            <b>Website:</b> {user.website}
+          </span>
+          <span>
+            <b>Address:</b> {user.address.street}, {user.address.city}
+          </span>
+        </div>
+      );
+
+      const App = () => {
+        // Quản lý user khởi tạo với null
+        const [user, setUser] = React.useState(null);
+        // Mặc định cho loading là true, khi load xong thì tắt loading đi
+        const [loading, setLoading] = React.useState(true);
+
+        React.useEffect(() => {
+          // fetch data
+          fetch("https://jsonplaceholder.typicode.com/users/1")
+            .then((res) => res.json())
+            .then((data) => {
+              // Khi có data thì set user, khi đó user không còn null nữa sẽ hiển thị card
+              setUser(data);
+              // Tắt loading bằng cách gán về false, khi false sẽ không render loading nữa
+              setLoading(false);
+            })
+            .catch((err) => {
+              console.error(err);
+              // Nếu lỗi cũng sẽ tắt loading
+              setLoading(false);
+            });
+        }, []);
+
+        return (
+          <>
+            {loading && <Loading />}
+            {/* Nếu loading vẫn còn true thì hiển thị loading, false thì tắt đi*/}
+            {user && <ProfileCard user={user} />}
+            {/* Nếu chưa có user(null khi khởi tạo) thì thôi không render card, chỉ render khi có user(khác null)*/}
+          </>
+        );
+      };
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
     </script>
   </body>
 </html>
