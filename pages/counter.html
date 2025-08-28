@@ -156,7 +156,8 @@
         const handleResetClick = () => setCount(0);
         // Hàm xử lý quay về trang chủ
         const handleHomeClick = () =>
-          (window.location.href = window.location.origin + "/index.html");
+          (window.location.href =
+            window.location.origin + window.location.pathname);
 
         return (
           <>
